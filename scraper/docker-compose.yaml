@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  openclaw-app:
+    build: .
+    container_name: openclaw-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - playwright-cache:/root/.cache/ms-playwright
+
+volumes:
+  playwright-cache:
