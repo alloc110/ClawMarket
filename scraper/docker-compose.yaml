@@ -8,6 +8,9 @@ services:
       - "3000:3000"
     volumes:
       - playwright-cache:/root/.cache/ms-playwright
+      - ./src:/app/src
+    env_file:
+      - .env
 
 volumes:
   playwright-cache:

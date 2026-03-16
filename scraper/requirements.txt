@@ -1,7 +1,3 @@
 playwright==1.40.0
-openclaw>=1.0.0
-redis==5.0.1
-psycopg2-binary==2.9.9
+discord.py==2.3.2
 python-dotenv==1.0.0
-tenacity>=8.2.3
-cmdop==0.1.27
