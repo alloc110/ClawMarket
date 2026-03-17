@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # 1. Trái tim lưu trữ: PostgreSQL
+  postgres:
+    image: postgres:16-alpine # Dùng bản Alpine cho siêu nhẹ
+    container_name: claw_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-clawadmin}
+      POSTGRES_PASSWORD: ${DB_PASS:-clawsecret}
+      POSTGRES_DB: ${DB_NAME:-clawmarket}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Bất tử hóa dữ liệu
+
+  # 2. Trái tim tốc độ: Redis
+  redis:
+    image: redis:7-alpine
+    container_name: claw_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data # Lưu cache ra ổ cứng phòng khi sập nguồn
+    command: redis-server --save 60 1 --loglevel warning
+
+  # 3. Con Bot cào dữ liệu của sếp (Đã làm ở Phase 1)
+  scraper:
+    image: allocknguyen/playwright-scaper:v1
+    container_name: claw_scraper
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./scraper/src:/app
+    env_file:
+      - .env
+
+# Khai báo ổ cứng ảo để dữ liệu không bị mất khi xóa Container
+volumes:
+  postgres_data:
+  redis_data:

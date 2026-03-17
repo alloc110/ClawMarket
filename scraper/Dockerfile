@@ -9,7 +9,7 @@ COPY package*.json ./
 
 # 4. Cài đặt thư viện (Chỉ cài playwright, không cần cài lại trình duyệt vì Image có sẵn rồi)
 RUN npm install
-
+      
 # 5. Copy toàn bộ code vào
 COPY . .
 
