@@ -25,7 +25,7 @@ cron.schedule('*/10 * * * *', () => {
 
 
         let clickCount = 0;
-        const maxClicks = 2;  //30
+        const maxClicks = 30;  //30
 
         // Bấm nút "Xem thêm" cho đến khi không còn hoặc đã bấm đủ số lần
         while (clickCount < maxClicks) {
@@ -76,7 +76,14 @@ cron.schedule('*/10 * * * *', () => {
                         
                         await vBtn.click();
                         await page.waitForTimeout(800); // Đợi đổi SKU trên URL
+                        
+                        const statusLocator = product.locator('.ProductCard_displayPriceText__nfghi');
+                        const statusText = await statusLocator.count() > 0 ? await statusLocator.innerText() : "";
 
+                        if (statusText.includes("Hàng sắp về")) {
+                            console.log(`⏩ Sản phẩm thứ ${i + 1}: Hàng sắp về -> Bỏ qua.`);
+                            continue; // Thoát ra và sang sản phẩm kế tiếp
+                        }
                         const priceRaw = await product.locator('.text-textOnWhitePrimary.b1-semibold').first().innerText();
                         const price = parseInt(priceRaw.replace(/\D/g, ''), 10);
                         
