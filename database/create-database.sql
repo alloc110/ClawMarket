@@ -1,32 +1,52 @@
--- =========================================================================
--- 1. BẢNG SẢN PHẨM (Lưu thông tin cố định, không thay đổi)
--- =========================================================================
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    product_url VARCHAR UNIQUE NOT NULL, -- Dùng Link làm định danh để không bị lưu trùng
+DROP SCHEMA IF EXISTS bronze CASCADE;
+CREATE SCHEMA IF NOT EXISTS bronze;
+
+
+CREATE TABLE IF NOT EXISTS bronze.products (
+    -- 1. Chuyển sang VARCHAR để chứa được cả số (TGDD) và mã hash (FPT)
+    id SERIAL PRIMARY KEY, -- Đây là ID tăng dần bạn muốn    -- 2. Shop name để phân biệt nếu 2 shop trùng ID
+    shop_name VARCHAR(100) NOT NULL, 
+    
+    product_url VARCHAR NOT NULL, 
     product_name VARCHAR NOT NULL,
-    shop_name VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Thời gian lần đầu phát hiện sản phẩm
+    variant_name VARCHAR(255) DEFAULT 'Mặc định',
+        
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- 3. Khóa chính kết hợp: Đảm bảo một mã ID tại một shop là duy nhất
+    CONSTRAINT unique_product_identity UNIQUE (shop_name, product_name, variant_name));
+
+-- Bảng lịch sử giá cũng phải đổi theo
+CREATE TABLE IF NOT EXISTS bronze.price_history (
+    product_id INT REFERENCES bronze.products(id), -- Chỉ dùng ID số (1, 2, 3...)
+    price BIGINT,
+    scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    -- Liên kết với bảng products
+);
+
+
+DROP SCHEMA IF EXISTS silver CASCADE;
+CREATE SCHEMA IF NOT EXISTS silver;
+
+-- =========================================================================
+-- 1. BẢNG SẢN PHẨM (Nằm trong schema bronze)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS silver.dim_products (
+  	product_key SERIAL PRIMARY KEY,
+	canonical_name VARCHAR(255), -- Tên chuẩn (VD: iPhone 15)
+	brand VARCHAR(100),          -- Tách từ tên (Apple, Samsung)
+	category VARCHAR(100),       -- (Mobile, Laptop)
+	source_id VARCHAR UNIQUE     -- dat
 );
 
 -- =========================================================================
--- 2. BẢNG LỊCH SỬ GIÁ (Phục vụ Phase 3: Báo động giảm giá)
+-- 2. BẢNG LỊCH SỬ GIÁ (Nằm trong schema bronze)
 -- =========================================================================
-CREATE TABLE price_history (
-    id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE, -- Liên kết với bảng products
-    price BIGINT NOT NULL, -- Dùng BIGINT cho tiền VNĐ để không bị tràn số
-    scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Thời gian cào giá
-);
-
--- =========================================================================
--- 3. BẢNG REVIEW (Phục vụ Phase 5: AI tóm tắt đánh giá)
--- =========================================================================
-CREATE TABLE reviews (
-    id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE, -- Liên kết với bảng products
-    author_name VARCHAR(100),
-    rating INT CHECK (rating >= 1 AND rating <= 5), -- Sao chỉ được từ 1 đến 5
-    content TEXT,
-    scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Thời gian cào review
+CREATE TABLE silver.fact_price_daily (
+	product_key INT REFERENCES silver.dim_products(product_key),
+	variant_detail VARCHAR(255), -- (Màu sắc, Dung lượng)
+	final_price BIGINT,
+	is_sale BOOLEAN,
+	valid_from TIMESTAMP
 );
