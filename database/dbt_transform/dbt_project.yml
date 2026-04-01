@@ -7,9 +7,7 @@ profile: 'dbt_transform'
 
 # Đường dẫn đến các thư mục chứa code SQL
 model-paths: ["models"]
-analysis-paths: ["analyses"]
 test-paths: ["tests"]
-seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 

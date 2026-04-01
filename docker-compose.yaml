@@ -15,7 +15,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data # Bất tử hóa dữ liệu
-      - ./database/create-database.sql:/docker-entrypoint-initdb.d/01_init.sql # Tự động tạo database và bảng khi khởi động
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01_init.sql # Tự động tạo database và bảng khi khởi động
     networks:
       - claw_network
   # 2. Trái tim tốc độ: Redis

@@ -4,7 +4,7 @@ import cron from 'node-cron';
 
 const redisClient = createClient({ url: 'redis://redis:6379' });
 await redisClient.connect();
-cron.schedule('*/10 * * * *', () => {
+cron.schedule('*/20 * * * *', () => {
 
     (async () => {
 
