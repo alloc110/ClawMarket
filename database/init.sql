@@ -1,5 +1,9 @@
 DROP SCHEMA IF EXISTS bronze CASCADE;
 CREATE SCHEMA IF NOT EXISTS bronze;
+DROP SCHEMA IF EXISTS silver CASCADE;
+CREATE SCHEMA IF NOT EXISTS silver;
+DROP SCHEMA IF EXISTS gold CASCADE;
+CREATE SCHEMA IF NOT EXISTS gold;
 
 
 CREATE TABLE IF NOT EXISTS bronze.products (
@@ -23,30 +27,4 @@ CREATE TABLE IF NOT EXISTS bronze.price_history (
     scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
     -- Liên kết với bảng products
-);
-
-
-DROP SCHEMA IF EXISTS silver CASCADE;
-CREATE SCHEMA IF NOT EXISTS silver;
-
--- =========================================================================
--- 1. BẢNG SẢN PHẨM (Nằm trong schema bronze)
--- =========================================================================
-CREATE TABLE IF NOT EXISTS silver.dim_products (
-  	product_key SERIAL PRIMARY KEY,
-	canonical_name VARCHAR(255), -- Tên chuẩn (VD: iPhone 15)
-	brand VARCHAR(100),          -- Tách từ tên (Apple, Samsung)
-	category VARCHAR(100),       -- (Mobile, Laptop)
-	source_id VARCHAR UNIQUE     -- dat
-);
-
--- =========================================================================
--- 2. BẢNG LỊCH SỬ GIÁ (Nằm trong schema bronze)
--- =========================================================================
-CREATE TABLE silver.fact_price_daily (
-	product_key INT REFERENCES silver.dim_products(product_key),
-	variant_detail VARCHAR(255), -- (Màu sắc, Dung lượng)
-	final_price BIGINT,
-	is_sale BOOLEAN,
-	valid_from TIMESTAMP
 );

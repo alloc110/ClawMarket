@@ -1,0 +1,12 @@
+dbt_transform: # Tên này phải khớp với khai báo ở bước 1
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      user: clawadmin
+      password: clawsecret123
+      port: 5432
+      dbname: clawmarket
+      schema: silver
+      threads: 4
+  target: dev

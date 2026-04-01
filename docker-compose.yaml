@@ -15,7 +15,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data # Bất tử hóa dữ liệu
-      - ./database/create-database.sql:/docker-entrypoint-initdb.d/01_init.sql # Tự động tạo database và bảng khi khởi động
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01_init.sql # Tự động tạo database và bảng khi khởi động
     networks:
       - claw_network
   # 2. Trái tim tốc độ: Redis
@@ -99,7 +99,18 @@ services:
       - ./scraper/src:/app/src # Mount code vào container để dễ chỉnh sửa
     env_file:
       - .env  
-# Khai báo ổ cứng ảo để dữ liệu không bị mất khi xóa Container
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.9.0
+    container_name: claw_dbt
+    volumes:
+      - ./database/dbt_transform:/usr/app
+      - ~/.dbt:/root/.dbt
+    networks:
+      - claw_network
+    environment:
+      - DBT_PROFILES_DIR=/usr/app
+    profiles: ["dbt_only"]
+
 volumes:
   postgres_data:
   redis_data:

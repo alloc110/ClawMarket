@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw_market_data  # Tên định danh (dùng để gọi trong hàm ref/source)
+    description: "Dữ liệu thô cào từ FPT, TGDD, CellphoneS và Schannel"
+    database: clawmarket    # Tên database của bạn
+    schema: bronze         # Schema chứa dữ liệu thô
+    # Định nghĩa các bảng thực tế đang có trong DB
+    tables:
+      - name: products
+      - name: price_history

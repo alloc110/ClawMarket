@@ -1,0 +1,30 @@
+name: 'dbt_transform' # Tên dự án của bạn
+version: '1.9.0'
+config-version: 2
+
+# ĐIỀM QUAN TRỌNG: Tên này phải trùng khớp với tên trong file profiles.yml
+profile: 'dbt_transform'
+
+# Đường dẫn đến các thư mục chứa code SQL
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Cấu hình cách dbt tạo bảng trong Database
+models:
+  dbt_transform: # Phải trùng với 'name' ở trên đầu file
+    # Lớp Silver: Làm sạch dữ liệu
+    silver:
+      +schema: silver
+      +materialized: table # Tạo thành bảng vật lý để truy vấn cho nhanh
+    # Lớp Gold: Báo cáo, so sánh giá
+    gold:
+      +schema: gold
+      +materialized: view  # Để là View để dữ liệu luôn cập nhật mới nhất từ Silver
+flags:
+  require_generic_test_arguments_property: true
