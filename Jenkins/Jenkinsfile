@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+
+    environment {
+        // Khai báo đường dẫn tới file profiles.yml của dbt nếu cần
+        DBT_PROFILES_DIR = "${WORKSPACE}"
+        // Nếu dùng thông tin nhạy cảm, hãy dùng Jenkins Credentials
+        DB_PASSWORD = credentials('db-password-secret-id')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install dbt-postgres  # Thay bằng adapter của bạn (dbt-mysql, dbt-bigquery, ...)
+                    dbt deps
+                '''
+            }
+        }
+
+        stage('DBT Debug') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    dbt debug  # Kiểm tra kết nối tới Database
+                '''
+            }
+        }
+
+        stage('DBT Run') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    dbt run --select path/to/your/models  # Chạy các model của bạn
+                '''
+            }
+        }
+
+        stage('DBT Test (Check NULL)') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    dbt test --select path/to/your/models
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            // Lưu lại log để kiểm tra khi có lỗi
+            archiveArtifacts artifacts: 'logs/*.log', fingerprint: true
+        }
+        failure {
+            echo "Pipeline thất bại! Có thể do code lỗi hoặc dữ liệu bị NULL/trùng lặp."
+        }
+    }
+}

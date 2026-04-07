@@ -12,7 +12,7 @@ services:
       - POSTGRES_DB=${DB_NAME:-clawmarket}
 
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data # Bất tử hóa dữ liệu
       - ./database/init.sql:/docker-entrypoint-initdb.d/01_init.sql # Tự động tạo database và bảng khi khởi động
@@ -26,7 +26,7 @@ services:
       - claw_network
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
     environment:
       - TZ=Asia/Ho_Chi_Minh
     volumes:
@@ -36,7 +36,7 @@ services:
   # 3. Con Bot cào dữ liệu của sếp (Đã làm ở Phase 1)
   
   cellphone_claw_scraper:
-    image: allocknguyen/playwright-scaper:v4
+    image: allocknguyen/playwright-scaper:v6
     networks:
       - claw_network
     command: node src/cellphone_index.js
@@ -52,7 +52,7 @@ services:
     environment:
       - TZ=Asia/Ho_Chi_Minh
   fpt_claw_scraper:
-    image: allocknguyen/playwright-scaper:v4
+    image: allocknguyen/playwright-scaper:v6
     networks:
       - claw_network
     command: node src/fpt_index.js
@@ -68,7 +68,7 @@ services:
     environment:
       - TZ=Asia/Ho_Chi_Minh
   tgdd_claw_scraper:
-    image: allocknguyen/playwright-scaper:v4
+    image: allocknguyen/playwright-scaper:v6
     networks:
       - claw_network
     command: node src/tgdd_index.js
@@ -84,7 +84,7 @@ services:
     environment:
       - TZ=Asia/Ho_Chi_Minh
   claw_worker:
-    image: allocknguyen/playwright-scaper:v4
+    image: allocknguyen/playwright-scaper:v6
     networks:
       - claw_network
     command: node src/worker.js
@@ -111,9 +111,29 @@ services:
       - DBT_PROFILES_DIR=/usr/app
     profiles: ["dbt_only"]
 
+  claw_fastapi:
+    build: ./backend
+    networks:
+      - claw_network
+    container_name: claw_fastapi
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app # Mount code vào container để dễ chỉnh sửa
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env  
+    environment:
+      DATABASE_URL: "postgresql://clawsense_viewer:viewer_secret_123@postgres:5432/clawmarket"
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      GEMINI_API_KEYS: ${GEMINI_API_KEYS}
+    restart: always
+
 volumes:
   postgres_data:
   redis_data:
+  ollama_data:
 networks:
   claw_network:
     driver: bridge

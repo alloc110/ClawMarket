@@ -9,8 +9,8 @@ WITH base AS (
         price,
         scraped_at,
         CAST(scraped_at AS DATE) AS price_date
-    FROM {{ source('raw_market_data', 'price_history') }}
-    WHERE price > 0 
+    FROM {{ ref('stg_price_history') }}
+    WHERE price > 0 and price IS NOT NULL
 ),
 
 enriched AS (
