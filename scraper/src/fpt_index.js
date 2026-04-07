@@ -19,8 +19,8 @@ cron.schedule('*/20 * * * *', () => {
         console.log(`🚀 Đang truy cập: ${p}`);
         await page.waitForTimeout(2000);
 
-        const productslist = '.ProductCard_brandCard__VQQT8'; 
-        await page.waitForSelector(productslist, { timeout: 1000 });
+        const productslist = 'div.group.relative.flex.h-full.flex-col'; 
+        await page.waitForSelector(productslist, { timeout: 5000 });
         const btnSelector = 'button.border-iconDividerOnWhite:has-text("Xem thêm")';
 
 
@@ -29,44 +29,46 @@ cron.schedule('*/20 * * * *', () => {
 
         // Bấm nút "Xem thêm" cho đến khi không còn hoặc đã bấm đủ số lần
         while (clickCount < maxClicks) {
-        const btn = page.locator(btnSelector);
-        
-        if (await btn.isVisible()) {
-            console.log(`🖱️  Đang bấm nút 'Xem thêm' lần ${clickCount + 1}...`);
-            await btn.scrollIntoViewIfNeeded();
-            await btn.click({ force: true }); 
+            const btn = page.locator(btnSelector);
             
-            await page.waitForTimeout(5000); 
-            
-            clickCount++;
-        } else {
-            console.log("✅ Đã mở hết tất cả bình luận hoặc không còn nút 'Xem thêm'!");
-            break; 
-        } 
+            if (await btn.isVisible()) {
+                console.log(`🖱️  Đang bấm nút 'Xem thêm' lần ${clickCount + 1}...`);
+                await btn.scrollIntoViewIfNeeded();
+                await btn.click({ force: true }); 
+                
+                await page.waitForTimeout(5000); 
+                
+                clickCount++;
+            } else {
+                console.log("✅ Đã mở hết tất cả bình luận hoặc không còn nút 'Xem thêm'!");
+                break; 
+            } 
         }
         
 
         const countProducts = await page.locator(productslist).count();
+        console.log(`🔍 Tìm thấy ${countProducts} sản phẩm trên trang ${p}. Đang xử lý...`);
         for(let i = 0; i < countProducts; i++) {
             // 1. Ép trình duyệt cuộn tới máy này (Tránh lỗi Lazy Load)
             try {
                 const product = page.locator(productslist).nth(i);
                 await product.scrollIntoViewIfNeeded();
 
-                const aTag = product.locator('h3.ProductCard_cardTitle__HlwIo a');
+               const aTag = product.locator('a[title]').first();
                 if (await aTag.count() === 0) continue;
 
-                const statusLocator = product.locator('.ProductCard_displayPriceText__nfghi');
-                const statusText = await statusLocator.count() > 0 ? await statusLocator.innerText() : "";
+                const cardInfo = product.locator('.cardInfo');
+                const statusText = await cardInfo.innerText();
 
-                if (statusText.includes("Hàng sắp về")) {
-                    console.log(`⏩ Sản phẩm thứ ${i + 1}: Hàng sắp về -> Bỏ qua.`);
-                    continue; // Thoát ra và sang sản phẩm kế tiếp
+                if (statusText.includes("Hàng sắp về") || statusText.includes("Liên hệ")) {
+                    console.log(`⏩ Sản phẩm thứ ${i + 1}: Trạng thái không phù hợp -> Bỏ qua.`);
+                    continue;
                 }
-    
-                const nameRaw = await aTag.getAttribute('title');
+
+                const nameRaw = await product.locator('h3').innerText();
                 const baseHref = await aTag.getAttribute('href');
-                const variantSection = product.locator('.ProductCard_variant__9q8hf button');
+
+                const variantSection = product.locator('ul.grid button, div.flex button');
                 const variantCount = await variantSection.count();
 
                 if (variantCount > 0) {
@@ -77,14 +79,17 @@ cron.schedule('*/20 * * * *', () => {
                         await vBtn.click();
                         await page.waitForTimeout(800); // Đợi đổi SKU trên URL
                         
-                        const statusLocator = product.locator('.ProductCard_displayPriceText__nfghi');
-                        const statusText = await statusLocator.count() > 0 ? await statusLocator.innerText() : "";
+                       
+                        const cardInfo = product.locator('.cardInfo');
+                        const statusText = await cardInfo.innerText();
 
-                        if (statusText.includes("Hàng sắp về")) {
-                            console.log(`⏩ Sản phẩm thứ ${i + 1}: Hàng sắp về -> Bỏ qua.`);
-                            continue; // Thoát ra và sang sản phẩm kế tiếp
+                        if (statusText.includes("Hàng sắp về") || statusText.includes("Liên hệ")) {
+                            console.log(`⏩ Sản phẩm thứ ${i + 1}: Trạng thái không phù hợp -> Bỏ qua.`);
+                            continue;
                         }
-                        const priceRaw = await product.locator('.text-textOnWhitePrimary.b1-semibold').first().innerText();
+
+                        const priceElement = product.locator('.b1-semibold').first();
+                        const priceRaw = await priceElement.innerText();            
                         const price = parseInt(priceRaw.replace(/\D/g, ''), 10);
                         
                         const data = {
@@ -94,7 +99,8 @@ cron.schedule('*/20 * * * *', () => {
                             price: price,
                             shop_name: "FPT"
                         };
-                        // console.log("📱 FPT have variants:", data);
+                        // console.log("📱 FPT:", data);
+
                         if (data.price > 0) {
                             await redisClient.lPush('scraper_queue', JSON.stringify(data));
                         }

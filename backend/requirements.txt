@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+psycopg2-binary
+langchain
+langchain-community
+langchain-core
+langchain-ollama
+# "Cứu cánh" cho các code cũ dùng .chains
+langchain-classic
+langchain-google-genai
