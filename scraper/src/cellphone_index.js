@@ -20,7 +20,7 @@ cron.schedule('*/20 * * * *', () => {
         await page.waitForTimeout(2000);
 
         const productslist = '.product-info-container.product-item'; 
-        await page.waitForSelector(productslist, { timeout: 1000 });
+        await page.waitForSelector(productslist, { timeout: 10000 });
         const btnSelector = 'a.button__show-more-product';
 
 

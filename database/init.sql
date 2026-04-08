@@ -28,3 +28,18 @@ CREATE TABLE IF NOT EXISTS bronze.price_history (
 
     -- Liên kết với bảng products
 );
+
+
+CREATE USER clawsense_viewer WITH PASSWORD 'viewer_secret_123';
+
+-- 2. Cho phép user này kết nối vào database
+GRANT CONNECT ON DATABASE clawmarket TO clawsense_viewer;
+
+-- 3. Cho phép user này sử dụng schema "bronze"
+GRANT USAGE ON SCHEMA bronze TO clawsense_viewer;
+
+-- 4. QUAN TRỌNG NHẤT: Chỉ cấp quyền SELECT (đọc) trên các bảng
+GRANT SELECT ON ALL TABLES IN SCHEMA bronze TO clawsense_viewer;
+
+-- 5. Đảm bảo các bảng tạo mới sau này user này cũng đọc được (tùy chọn)
+ALTER DEFAULT PRIVILEGES IN SCHEMA bronze,silver, gold GRANT SELECT ON TABLES TO clawsense_viewer;

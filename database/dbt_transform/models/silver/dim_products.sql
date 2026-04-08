@@ -5,7 +5,7 @@
 
 WITH raw_data AS (
     -- Dùng source để dbt theo dõi lineage
-    SELECT * FROM {{ source('raw_market_data', 'products') }} 
+    SELECT * FROM {{ ref('stg_products') }} 
 ),
 
 cleaned_data AS (
