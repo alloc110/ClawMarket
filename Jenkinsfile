@@ -1,19 +1,14 @@
 pipeline {
-    agent any 
+    agent any
 
     environment {
-        // Trỏ thẳng DBT_PROFILES_DIR vào thư mục chứa dbt_project.yml và profiles.yml
-        DBT_PROJECT_DIR = "database/dbt_transform"
+        // LUÔN LUÔN dùng đường dẫn tuyệt đối cho dbt
+        DBT_PROJECT_DIR = "${WORKSPACE}/database/dbt_transform"
+        DBT_PROFILES_DIR = "${WORKSPACE}/database/dbt_transform"
         DB_PASSWORD = credentials('db-password-secret-id')
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 sh '''
@@ -22,46 +17,37 @@ pipeline {
                     pip install --upgrade pip
                     pip install dbt-postgres
                 '''
-                // Phải vào đúng thư mục mới chạy được dbt deps
-                dir("${DBT_PROJECT_DIR}") {
-                    sh '../../venv/bin/dbt deps'
-                }
+            }
+        }
+
+        stage('DBT Deps') {
+            steps {
+                // Đứng ở đâu cũng được, vì mình đã chỉ định PROJECT_DIR tuyệt đối
+                sh ". venv/bin/activate && dbt deps --project-dir ${DBT_PROJECT_DIR}"
             }
         }
 
         stage('DBT Debug') {
             steps {
-                dir("${DBT_PROJECT_DIR}") {
-                    // Dùng --profiles-dir . để dbt tìm thấy file profiles.yml trong thư mục này
-                    sh '../../venv/bin/dbt debug --profiles-dir .'
-                }
+                sh ". venv/bin/activate && dbt debug --project-dir ${DBT_PROJECT_DIR} --profiles-dir ${DBT_PROFILES_DIR}"
             }
         }
 
         stage('DBT Run') {
             steps {
-                dir("${DBT_PROJECT_DIR}") {
-                    sh '../../venv/bin/dbt run --profiles-dir .'
-                }
-            }
-        }
-
-        stage('DBT Test (Check NULL)') {
-            steps {
-                dir("${DBT_PROJECT_DIR}") {
-                    sh '../../venv/bin/dbt test --profiles-dir .'
-                }
+                # Sếp dùng build cho nó xịn, vừa run vừa test luôn
+                sh ". venv/bin/activate && dbt build --project-dir ${DBT_PROJECT_DIR} --profiles-dir ${DBT_PROFILES_DIR}"
             }
         }
     }
 
     post {
         always {
-            // Sửa lại đường dẫn archive vì dbt sinh log trong thư mục project
-            archiveArtifacts artifacts: "${DBT_PROJECT_DIR}/logs/*.log", allowEmptyArchive: true, fingerprint: true
+            // Sửa lại đường dẫn archive cho đúng tuyệt đối
+            archiveArtifacts artifacts: 'database/dbt_transform/logs/*.log', allowEmptyArchive: true
         }
         failure {
-            echo "Pipeline thất bại! Hãy kiểm tra log trong ${DBT_PROJECT_DIR}/logs/"
+            echo "Pipeline 'vấp cỏ' rồi sếp ơi! Check log trong Artifacts nhé."
         }
     }
 }
