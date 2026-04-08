@@ -1,7 +1,7 @@
 -- models/staging/stg_products.sql
 
 WITH source_products AS (
-    SELECT * FROM {{ source('bronze', 'products') }}
+    SELECT * FROM {{ source('raw_market_data', 'products') }}
 ),
 
 -- 1. Tìm các URL bị trùng lặp
