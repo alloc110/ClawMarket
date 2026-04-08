@@ -3,6 +3,13 @@ FROM jenkins/jenkins:lts
 USER root
 
 # 1. Cài đặt Docker CLI bằng Static Binary (Bản 27.x)
+
+RUN apt-get update && apt-get install -y \
+      python3 \
+      python3-pip \
+      python3-venv \
+      curl \
+      && rm -rf /var/lib/apt/lists/*
 # Cách này giúp bypass hoàn toàn lỗi "Unable to locate package"
 RUN curl -L https://download.docker.com/linux/static/stable/x86_64/docker-27.0.3.tgz -o docker.tgz \
       && tar xzvf docker.tgz \
