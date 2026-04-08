@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        cron('H/20 * * * *')  
+    }
+
     environment {
         // LUÔN LUÔN dùng đường dẫn tuyệt đối cho dbt
         DBT_PROJECT_DIR = "${WORKSPACE}/database/dbt_transform"
