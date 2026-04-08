@@ -126,14 +126,26 @@ services:
       - .env  
     environment:
       DATABASE_URL: "postgresql://clawsense_viewer:viewer_secret_123@postgres:5432/clawmarket"
-      OLLAMA_BASE_URL: "http://ollama:11434"
       GEMINI_API_KEYS: ${GEMINI_API_KEYS}
     restart: always
 
+  jenkins:
+    build: ./Jenkins
+    container_name: jenkins
+    user: root # Để có quyền chạy docker lệnh
+    privileged: true
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock # Để Jenkins điều khiển Docker máy thật
+    networks:
+      - claw_network
 volumes:
   postgres_data:
   redis_data:
-  ollama_data:
+  jenkins_home: 
 networks:
   claw_network:
     driver: bridge
