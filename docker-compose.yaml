@@ -142,6 +142,26 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # Để Jenkins điều khiển Docker máy thật
     networks:
       - claw_network
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - claw_network
+
+  # --- 3. Grafana (Giao diện hiển thị siêu ngầu) ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Sếp có thể đổi pass ở đây
+    networks:
+      - claw_network
 volumes:
   postgres_data:
   redis_data:
