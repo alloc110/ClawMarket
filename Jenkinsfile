@@ -1,7 +1,6 @@
 pipeline {
     // Jenkins sẽ tự pull image python về để chạy các lệnh bên dưới
-    agent {
-    }
+    agent any 
 
     environment {
         // Khai báo đường dẫn tới file profiles.yml của dbt nếu cần
