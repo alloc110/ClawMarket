@@ -1,13 +1,8 @@
 pipeline {
     // Jenkins sẽ tự pull image python về để chạy các lệnh bên dưới
     agent {
-        docker {
-            image 'python:3.11-slim'
-            // Map thêm docker socket nếu sếp cần chạy docker lệnh bên trong (tùy chọn)
-            args '-u root' 
-        }
     }
-    
+
     environment {
         // Khai báo đường dẫn tới file profiles.yml của dbt nếu cần
         DBT_PROFILES_DIR = "${WORKSPACE}"
