@@ -40,7 +40,7 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
-                    dbt run --select path/to/your/models  # Chạy các model của bạn
+                    dbt run --select ./database/dbt_transform/models  # Chạy các model của bạn
                 '''
             }
         }
@@ -49,7 +49,7 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
-                    dbt test --select path/to/your/models
+                    dbt test --select ./database/dbt_transform/models
                 '''
             }
         }
