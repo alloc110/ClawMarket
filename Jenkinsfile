@@ -35,7 +35,7 @@ pipeline {
 
         stage('DBT Run') {
             steps {
-                # Sếp dùng build cho nó xịn, vừa run vừa test luôn
+                // Sếp dùng build cho nó xịn, vừa run vừa test luôn
                 sh ". venv/bin/activate && dbt build --project-dir ${DBT_PROJECT_DIR} --profiles-dir ${DBT_PROFILES_DIR}"
             }
         }
